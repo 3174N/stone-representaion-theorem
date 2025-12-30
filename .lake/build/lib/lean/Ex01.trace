@@ -1,0 +1,33 @@
+{"synthetic": false,
+ "schemaVersion": "2025-09-10",
+ "outputs":
+ {"o": ["c865164363c8681f.olean"],
+  "i": "baac460c6f115280.ilean",
+  "c": "122beaa85b85010c.c"},
+ "log":
+ [{"message":
+   ".> LEAN_PATH=/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/Cli/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/batteries/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/Qq/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/aesop/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/importGraph/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/plausible/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/packages/mathlib/.lake/build/lib/lean:/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/build/lib/lean /home/ethan/.elan/toolchains/leanprover--lean4---v4.25.0-rc2/bin/lean /home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/Ex01.lean -o /home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/build/lib/lean/Ex01.olean -i /home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/build/lib/lean/Ex01.ilean -c /home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/build/ir/Ex01.c --setup /home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/.lake/build/ir/Ex01.setup.json --json",
+   "level": "trace"}],
+ "inputs":
+ [["Ex01:deps",
+   [["deps",
+     [["Ex01/Ex01:extraDep", [["@Ex01:extraDep", "00000000000006bb"]]],
+      ["imports",
+       [["Ex01.Basic transitive imports (legacy)", "00000000000006bb"],
+        ["Ex01.Basic:importAllArts", "6d19ae6709692d50"]]]]],
+    ["libs",
+     [["import dynlibs", "00000000000006bb"],
+      ["package external libraries", "00000000000006bb"],
+      ["module dynlibs", "00000000000006bb"],
+      ["module plugins", "00000000000006bb"]]]]],
+  ["Lean 4.25.0, commit 744f98064b056ee27fc8c97f524797c8cc96f436",
+   "4bbac11c6209e48b"],
+  ["/home/ethan/Documents/obsidian-uni/Term05/Formals/Ex01/Ex01.lean",
+   "ecdeb10243724e92"],
+  ["options",
+   [["-DmaxSynthPendingDepth=3", "c78e353d34de85d4"],
+    ["-Dweak.linter.mathlibStandardSet=true", "8a155799906f2b42"],
+    ["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
+    ["-Dpp.unicode.fun=true", "9b94070140457fab"]]],
+  ["Module.leanArgs: #[]", "00000000000006bb"]],
+ "depHash": "983d05786e715f1f"}
