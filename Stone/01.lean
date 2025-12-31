@@ -77,11 +77,20 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
           rw [if_pos h]
           exact Eq.symm (inf_bot_eq (if a ∈ I then ⊥ else ⊤))
       case isFalse h =>
-        sorry
-        -- have hAAndBNotInI : a ∉ I ∧ b ∉ I := by
-          -- constructor
-          -- · exact?
-
+        have hAAndBNotInI : a ∉ I ∧ b ∉ I := by
+          rw [← @not_or]
+          by_contra hc
+          cases hc
+          case inl hl =>
+            have hAMeetBLeA : a ⊓ b ≤ a := inf_le_left
+            have : a ⊓ b ∈ I := I.lower' hAMeetBLeA hl
+            exact h this
+          case inr hr =>
+            have hAMeetBLeB : a ⊓ b ≤ b := inf_le_right
+            have : a ⊓ b ∈ I := I.lower' hAMeetBLeB hr
+            exact h this
+        rw [if_neg hAAndBNotInI.left, if_neg hAAndBNotInI.right]
+        exact Eq.symm (top_inf_eq ⊤)
 
     map_top' := by
       have : ⊤ ∉ I := Order.Ideal.IsProper.top_notMem hIProper
@@ -91,6 +100,10 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
       have : ⊥ ∈ I := Order.Ideal.bot_mem I
       rw [if_pos this]
   }
-  have hPhiPTop : φ p = ⊤ := sorry
+  have hPhiPTop : φ p = ⊤ := by
+    have : pᶜ ∈ I := Order.Ideal.principal_le_iff.mp hIGeIT
+    have hPNotInI : p ∉ I := Order.Ideal.IsProper.notMem_of_compl_mem hIProper this
+    have : φ.toFun p = ⊤ := if_neg hPNotInI
+    exact this
   use BoolAlg.ofHom φ
   exact hPhiPTop
