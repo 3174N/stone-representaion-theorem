@@ -1,6 +1,7 @@
 import Mathlib.Tactic
 import Mathlib.Order.Category.BoolAlg
 import Mathlib.Order.Ideal
+import Mathlib.Order.PrimeIdeal
 
 -- variable {A : Type*} [BoolAlg]
 
@@ -26,16 +27,70 @@ lemma comp_non_bot_is_non_top (A : BoolAlg) (p : A) (hPNonBot : p ≠ ⊥) : p�
   exact hPNonBot this
 
 lemma exists_maximal_ideal (A : BoolAlg) (I : Order.Ideal A) (hIProper : I.IsProper)
-  : ∃ I' : Order.Ideal A, I'.IsProper ∧ I'.IsMaximal ∧ I ≤ I' := by
+  : ∃ I' : Order.Ideal A, Order.Ideal.IsPrime I' ∧ I'.IsMaximal ∧ I'.IsProper ∧ I ≤ I' := by
   sorry
 
 
 lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠ ⊥) :
   ∃ φ : A ⟶ B , φ p = ⊤ := by
-  let I := Order.Ideal.principal pᶜ
+  let I' := Order.Ideal.principal pᶜ
   have : pᶜ ≠ ⊤ := comp_non_bot_is_non_top A p pNonZero
-  have IProper : I.IsProper := non_top_principal_is_proper A pᶜ this
+  have hITProper : I'.IsProper := non_top_principal_is_proper A pᶜ this
+  obtain ⟨ I, hI ⟩ := exists_maximal_ideal A I' hITProper
+  obtain ⟨ hIPrime, hIMax, hIProper, hIGeIT ⟩ := hI
 
-  let φ : BoundedLatticeHom A B := sorry
+  classical
+  let φ : BoundedLatticeHom A B := {
+    toFun := fun a ↦ if a ∈ I then ⊥ else ⊤
+
+    map_sup' := by
+      intro a b
+      split
+      case isTrue h =>
+        have hAAndBInI : a ∈ I ∧ b ∈ I := Order.Ideal.sup_mem_iff.mp h
+        rw [if_pos hAAndBInI.left, if_pos hAAndBInI.right]
+        exact Eq.symm (bot_sup_eq ⊥)
+      case isFalse h =>
+        have hAOrBNotInI : a ∉ I ∨ b ∉ I := by
+          by_contra!
+          have hACupBInI : a ⊔ b ∈ I := by
+            exact Order.Ideal.sup_mem_iff.mpr this
+          exact h hACupBInI
+        cases hAOrBNotInI
+        case inl hA =>
+          rw [if_neg hA]
+          exact Eq.symm (top_sup_eq (if b ∈ I then ⊥ else ⊤))
+        case inr hB =>
+          rw [if_neg hB]
+          exact Eq.symm (sup_top_eq (if a ∈ I then ⊥ else ⊤))
+
+    map_inf' := by
+      intro a b
+      split
+      case isTrue h =>
+        have hAOrBInI : a ∈ I ∨ b ∈ I := Order.Ideal.IsPrime.mem_or_mem hIPrime h
+        cases hAOrBInI
+        case inl h =>
+          rw [if_pos h]
+          exact Eq.symm (bot_inf_eq (if b ∈ I then ⊥ else ⊤))
+        case inr h =>
+          rw [if_pos h]
+          exact Eq.symm (inf_bot_eq (if a ∈ I then ⊥ else ⊤))
+      case isFalse h =>
+        sorry
+        -- have hAAndBNotInI : a ∉ I ∧ b ∉ I := by
+          -- constructor
+          -- · exact?
+
+
+    map_top' := by
+      have : ⊤ ∉ I := Order.Ideal.IsProper.top_notMem hIProper
+      rw [if_neg this]
+
+    map_bot' := by
+      have : ⊥ ∈ I := Order.Ideal.bot_mem I
+      rw [if_pos this]
+  }
+  have hPhiPTop : φ p = ⊤ := sorry
   use BoolAlg.ofHom φ
-  sorry
+  exact hPhiPTop
