@@ -2,7 +2,6 @@ import Mathlib.Tactic
 import Mathlib.Order.Category.BoolAlg
 import Mathlib.Order.Ideal
 import Mathlib.Order.Zorn
-import Mathlib.Topology.Category.Profinite.Basic
 
 lemma exists_maximal_ideal (A : BoolAlg) (I : Order.Ideal A) (hIProper : I.IsProper)
   : ∃ I' : Order.Ideal A, I'.IsMaximal ∧ I ≤ I' := by
@@ -148,5 +147,3 @@ lemma exists_maximal_ideal (A : BoolAlg) (I : Order.Ideal A) (hIProper : I.IsPro
       simp_all only [Set.coe_setOf, Set.mem_setOf_eq, Subtype.forall, forall_and_index,
         Subtype.exists, Subtype.mk_le_mk, exists_prop, s]
   }
-
-noncomputable def StoneRep : BoolAlg ≌ Profinite := by sorry
