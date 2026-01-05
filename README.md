@@ -1,4 +1,4 @@
-# Ex01
+# Stone
 
 ## GitHub configuration
 

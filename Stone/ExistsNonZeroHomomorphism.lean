@@ -2,7 +2,7 @@ import Mathlib.Tactic
 import Mathlib.Order.Category.BoolAlg
 import Mathlib.Order.Ideal
 import Mathlib.Order.PrimeIdeal
-import Stone.existsMaximalIdeal
+import Stone.ExistsMaximalIdeal
 
 -- variable {A : Type*} [BoolAlg]
 
