@@ -2,6 +2,7 @@ import Mathlib.Tactic
 import Mathlib.Order.Category.BoolAlg
 import Mathlib.Order.Ideal
 import Mathlib.Order.PrimeIdeal
+import Stone.existsMaximalIdeal
 
 -- variable {A : Type*} [BoolAlg]
 
@@ -26,18 +27,13 @@ lemma comp_non_bot_is_non_top (A : BoolAlg) (p : A) (hPNonBot : p ≠ ⊥) : p�
   have : p = ⊥ := by exact compl_eq_top.mp this
   exact hPNonBot this
 
-lemma exists_maximal_ideal (A : BoolAlg) (I : Order.Ideal A) (hIProper : I.IsProper)
-  : ∃ I' : Order.Ideal A, Order.Ideal.IsPrime I' ∧ I'.IsMaximal ∧ I'.IsProper ∧ I ≤ I' := by
-  sorry
-
-
 lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠ ⊥) :
   ∃ φ : A ⟶ B , φ p = ⊤ := by
   let I' := Order.Ideal.principal pᶜ
   have : pᶜ ≠ ⊤ := comp_non_bot_is_non_top A p pNonZero
   have hITProper : I'.IsProper := non_top_principal_is_proper A pᶜ this
   obtain ⟨ I, hI ⟩ := exists_maximal_ideal A I' hITProper
-  obtain ⟨ hIPrime, hIMax, hIProper, hIGeIT ⟩ := hI
+  obtain ⟨ hIMax, hIGeIT ⟩ := hI
 
   classical
   let φ : BoundedLatticeHom A B := {
@@ -68,7 +64,7 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
       intro a b
       split
       case isTrue h =>
-        have hAOrBInI : a ∈ I ∨ b ∈ I := Order.Ideal.IsPrime.mem_or_mem hIPrime h
+        have hAOrBInI : a ∈ I ∨ b ∈ I := Order.Ideal.IsPrime.mem_or_mem hIMax.isPrime h
         cases hAOrBInI
         case inl h =>
           rw [if_pos h]
@@ -93,7 +89,7 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
         exact Eq.symm (top_inf_eq ⊤)
 
     map_top' := by
-      have : ⊤ ∉ I := Order.Ideal.IsProper.top_notMem hIProper
+      have : ⊤ ∉ I := Order.Ideal.IsProper.top_notMem hIMax.toIsProper
       rw [if_neg this]
 
     map_bot' := by
@@ -102,7 +98,7 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
   }
   have hPhiPTop : φ p = ⊤ := by
     have : pᶜ ∈ I := Order.Ideal.principal_le_iff.mp hIGeIT
-    have hPNotInI : p ∉ I := Order.Ideal.IsProper.notMem_of_compl_mem hIProper this
+    have hPNotInI : p ∉ I := Order.Ideal.IsProper.notMem_of_compl_mem hIMax.toIsProper this
     have : φ.toFun p = ⊤ := if_neg hPNotInI
     exact this
   use BoolAlg.ofHom φ

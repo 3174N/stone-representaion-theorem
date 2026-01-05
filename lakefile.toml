@@ -1,4 +1,4 @@
-name = "Ex01"
+name = "Stone"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["Ex01"]
@@ -14,4 +14,4 @@ name = "mathlib"
 scope = "leanprover-community"
 
 [[lean_lib]]
-name = "Ex01"
+name = "Stone"
