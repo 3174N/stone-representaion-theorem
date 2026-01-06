@@ -7,6 +7,20 @@ import Mathlib.Order.Hom.BoundedLattice
 
 open CategoryTheory
 
+def Two : BoolAlg := BoolAlg.of Bool
+def stoneEmbed (A : BoolAlg) : (A ⟶ Two) → (A → Bool) := fun f a => f a
+instance (A : BoolAlg) : TopologicalSpace (A ⟶ Two) :=
+  TopologicalSpace.induced (stoneEmbed A) inferInstance
+
+lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)).carrier := sorry
+
+lemma stone_space_is_hausdorrf (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := sorry
+
+lemma stone_space_is_totally_disconnected (A : BoolAlg) : TotallyDisconnectedSpace (TopCat.of (A ⟶ Two)).carrier := sorry
+
+lemma clopen_iff_exact_fa_is_top {A : BoolAlg} (U : Set (TopCat.of (A ⟶ Two))) (hUIsClopen : IsClopen U) :
+  ∀ (U : Set (TopCat.of (A ⟶ Two))), IsClopen U ↔ ∃ a : A, U = {ϕ | ϕ a = ⊤} := sorry
+
 
 def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
     obj := fun X => BoolAlg.of (TopologicalSpace.Clopens X.unop)
@@ -28,36 +42,10 @@ def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
           · apply f.unop.hom'.continuous_toFun.isOpen_preimage
             exact IsClopen.isOpen hUIsClopen
         }
-        map_sup' := by {
-          intro a b
-          let finva := f.unop.hom' ⁻¹' a
-          let finvb := f.unop.hom' ⁻¹' b
-          let finvab := f.unop.hom' ⁻¹' (a ⊔ b)
-          suffices finva ⊔ finvb = finvab by {
-            exact rfl
-          }
-          simp [max, SemilatticeSup.sup]
-          unfold finvab
-          rw [@Set.Subset.antisymm_iff]
-          constructor
-          · intro x xInInvfaOrInvfb
-            rw [Set.mem_preimage]
-            simp [max, SemilatticeSup.sup]
-            unfold finva finvb at xInInvfaOrInvfb
-            rcases xInInvfaOrInvfb with xInfinva | xInfinvb
-            · exact Or.symm (Or.inr xInfinva)
-            · exact Or.symm (Or.inl xInfinvb)
-          · intro x xInInvfaorb
-            simp [Set.mem_preimage] at xInInvfaorb
-            simp [Set.mem_union]
-            unfold finva finvb
-            rcases xInInvfaorb with fxIna | fxInb
-            · exact Or.symm (Or.inr fxIna)
-            · exact Or.symm (Or.inl fxInb)
-        }
-        map_inf' := sorry
-        map_top' := sorry
-        map_bot' := sorry
+        map_sup' := by exact fun a b ↦ rfl
+        map_inf' := by exact fun a b ↦ rfl
+        map_top' := by exact rfl
+        map_bot' := by exact rfl
       }
       use g
       · exact g.map_top'
@@ -66,7 +54,23 @@ def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
 }
 
 def Hom2 : BoolAlg ⥤ Profiniteᵒᵖ := by refine {
-  sorry
+  obj := by {
+    intro A
+    use TopCat.of (A ⟶ Two)
+    · exact stone_space_is_totally_disconnected A
+    · exact stone_space_is_compact A
+    · exact stone_space_is_hausdorrf A
+  }
+  map := by {
+    intro A B f
+    let HomA2 := TopCat.of (A ⟶ Two)
+    let HomB2 :=  TopCat.of (B ⟶ Two)
+    let g : HomB2 → HomA2 := fun ϕ ↦ (f ≫ ϕ)
+    use g
+    rw [@continuous_def]
+    intro s hsIsOpen
+    sorry
+  }
 }
 
 def StoneRepresentationEquivalence : BoolAlg ≌ Profiniteᵒᵖ := by refine {
