@@ -14,9 +14,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-  deploy:
-    environment:
-      name: github-pages
+  # deploy:
+  #   environment:
+  #     name: github-pages
 
     steps:
       - uses: actions/checkout@v5
