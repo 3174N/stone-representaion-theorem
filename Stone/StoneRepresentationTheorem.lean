@@ -6,6 +6,8 @@ import Mathlib.Topology.Defs.Basic
 import Mathlib.Topology.Order.Lattice
 import Mathlib.Order.Hom.BoundedLattice
 import Mathlib.Topology.Category.TopCat.Basic
+import Mathlib.Topology.Separation.Hausdorff
+import Mathlib.Data.FunLike.Basic
 
 open CategoryTheory
 
@@ -15,6 +17,7 @@ instance : DiscreteTopology Two := ⟨rfl⟩
 instance : ContinuousInf Two := ⟨continuous_of_discreteTopology⟩
 instance : ContinuousSup Two := ⟨continuous_of_discreteTopology⟩
 instance : Finite Two := Finite.of_fintype Bool
+instance : T2Space Two := DiscreteTopology.toT2Space
 def stoneEmbed (A : BoolAlg) : (A ⟶ Two) → (A → Bool) := fun f a => f a
 instance (A : BoolAlg) : TopologicalSpace (A ⟶ Two) :=
   TopologicalSpace.induced (stoneEmbed A) inferInstance
@@ -101,8 +104,30 @@ lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)
   exact CompactSpace.isCompact_univ
 }
 
-lemma stone_space_is_hausdorrf (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := by {
-  sorry
+lemma stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := by {
+  have hProdIsT2: T2Space (A → Two) := Pi.t2Space
+  let Homs : Set (A → Two) := { φ |  φ : (A ⟶ Two) }
+  have hHomsT2 : T25Space Homs := Subtype.instT25Space
+
+  have hInducing : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : (A → Two))) := {
+    eq_induced := rfl
+  }
+  let g : (A ⟶ Two) → Homs := fun f ↦ ⟨ConcreteCategory.hom f, by simp [Homs]⟩
+  have hEmbedding: Topology.IsEmbedding g := {
+    eq_induced := by {
+      rw [hInducing.eq_induced, Topology.IsEmbedding.subtypeVal.eq_induced]
+      rw [induced_compose]
+      rfl
+    }
+
+    injective := by {
+      intro x y h
+      apply ConcreteCategory.hom_ext
+      exact congr_fun (Subtype.mk_eq_mk.mp h)
+    }
+  }
+
+  exact hEmbedding.t2Space
 }
 
 lemma stone_space_is_totally_disconnected (A : BoolAlg)
@@ -151,7 +176,7 @@ def Hom2 : BoolAlg ⥤ Profiniteᵒᵖ := by refine {
     use TopCat.of (A ⟶ Two)
     · exact stone_space_is_totally_disconnected A
     · exact stone_space_is_compact A
-    · exact stone_space_is_hausdorrf A
+    · exact stone_space_is_hausdorff A
   }
   map := by {
     intro A B f
