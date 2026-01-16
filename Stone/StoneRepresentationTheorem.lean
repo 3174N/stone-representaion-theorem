@@ -105,9 +105,7 @@ lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)
 }
 
 lemma stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := by {
-  have hProdIsT2: T2Space (A → Two) := Pi.t2Space
   let Homs : Set (A → Two) := { φ |  φ : (A ⟶ Two) }
-  have hHomsT2 : T25Space Homs := Subtype.instT25Space
 
   have hInducing : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : (A → Two))) := {
     eq_induced := rfl
@@ -132,7 +130,30 @@ lemma stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).c
 
 lemma stone_space_is_totally_disconnected (A : BoolAlg)
   : TotallyDisconnectedSpace (TopCat.of (A ⟶ Two)).carrier := by {
-  sorry
+  let Homs : Set (A → Two) := { φ |  φ : (A ⟶ Two) }
+
+  have hInducing : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : (A → Two))) := {
+    eq_induced := rfl
+  }
+  let g : (A ⟶ Two) → Homs := fun f ↦ ⟨ConcreteCategory.hom f, by simp [Homs]⟩
+  have hEmbedding: Topology.IsEmbedding g := {
+    eq_induced := by {
+      rw [hInducing.eq_induced, Topology.IsEmbedding.subtypeVal.eq_induced]
+      rw [induced_compose]
+      rfl
+    }
+
+    injective := by {
+      intro x y h
+      apply ConcreteCategory.hom_ext
+      exact congr_fun (Subtype.mk_eq_mk.mp h)
+    }
+  }
+  refine ⟨fun t _ ht_pre => ?_⟩
+  have h_img_pre : IsPreconnected (g '' t) := hEmbedding.isPreconnected_image.mpr ht_pre
+  have h_img_sub : (g '' t).Subsingleton :=
+    IsPreconnected.subsingleton h_img_pre
+  exact hEmbedding.injective.subsingleton_image_iff.mp h_img_sub
 }
 
 lemma clopen_iff_exact_fa_is_top {A : BoolAlg} (U : Set (TopCat.of (A ⟶ Two))) (hUIsClopen : IsClopen U) :
