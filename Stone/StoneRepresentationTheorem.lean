@@ -26,7 +26,7 @@ instance (A : BoolAlg) : TopologicalSpace (A ⟶ Two) :=
 
 
 
-lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)).carrier := by {
+instance stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)).carrier := by {
   let Prod := A → Two
   let Homs : Set Prod := { φ |  φ : (A ⟶ Two) }
   have hProdImpliesHom :
@@ -55,7 +55,7 @@ lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)
       rw [hHomsAreHoms]
       apply IsClosed.inter
       · change IsClosed { f : A → Two | ∀ (x y : A), f (x ⊓ y) = f x ⊓ f y }
-        simp [Set.setOf_forall]
+        simp only [Set.setOf_forall]
         apply isClosed_iInter
         intro x
         apply isClosed_iInter
@@ -67,7 +67,7 @@ lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)
           · exact continuous_apply y
       · apply IsClosed.inter
         · change IsClosed { f : A → Two | ∀ (x y : A), f (x ⊔ y) = f x ⊔ f y }
-          simp [Set.setOf_forall]
+          simp only [Set.setOf_forall]
           apply isClosed_iInter
           intro x
           apply isClosed_iInter
@@ -89,22 +89,19 @@ lemma stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)
     have hHomsCompact :
       IsCompact Homs := IsCompact.of_isClosed_subset hProdCompact hHomIsClosed hHomsSSProd
 
-    have : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : Prod)) := by {
-      exact { eq_induced := rfl }
-    }
-    rw [←isCompact_univ_iff]
-    rw [this.isCompact_iff]
+    have : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : Prod)) := {eq_induced := rfl}
+    rw [←isCompact_univ_iff, this.isCompact_iff]
     convert hHomsCompact
     ext f
-    simp [Homs, Set.image_univ, Set.mem_range]
-    exact Iff.symm Set.mem_setOf
+    simp only [Set.image_univ, Set.mem_range, Homs]
+    exact Set.mem_setOf.symm
   }
 
   apply hProdImpliesHom
   exact CompactSpace.isCompact_univ
 }
 
-lemma stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := by {
+instance stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := by {
   let Homs : Set (A → Two) := { φ |  φ : (A ⟶ Two) }
 
   have hInducing : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : (A → Two))) := {
@@ -128,7 +125,7 @@ lemma stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).c
   exact hEmbedding.t2Space
 }
 
-lemma stone_space_is_totally_disconnected (A : BoolAlg)
+instance stone_space_is_totally_disconnected (A : BoolAlg)
   : TotallyDisconnectedSpace (TopCat.of (A ⟶ Two)).carrier := by {
   let Homs : Set (A → Two) := { φ |  φ : (A ⟶ Two) }
 
@@ -138,8 +135,7 @@ lemma stone_space_is_totally_disconnected (A : BoolAlg)
   let g : (A ⟶ Two) → Homs := fun f ↦ ⟨ConcreteCategory.hom f, by simp [Homs]⟩
   have hEmbedding: Topology.IsEmbedding g := {
     eq_induced := by {
-      rw [hInducing.eq_induced, Topology.IsEmbedding.subtypeVal.eq_induced]
-      rw [induced_compose]
+      rw [hInducing.eq_induced, Topology.IsEmbedding.subtypeVal.eq_induced, induced_compose]
       rfl
     }
 
@@ -167,12 +163,9 @@ def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
       let ClopX : BoolAlg := BoolAlg.of (TopologicalSpace.Clopens X.unop)
       let ClopY : BoolAlg := BoolAlg.of (TopologicalSpace.Clopens Y.unop)
       let g : BoundedLatticeHom ClopX ClopY := {
-        toFun := by {
-          intro U
-          let V := f.unop.hom' ⁻¹' U
-          use V
-
-          simp [IsClopen, IsOpen]
+        toFun U := by {
+          use f.unop.hom' ⁻¹' U
+          simp only [IsClopen, IsOpen]
           obtain ⟨Uval, hUIsClopen⟩ := U
           constructor
           · obtain ⟨hUIsClosed, hUIsOpen⟩ := hUIsClopen
@@ -180,10 +173,10 @@ def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
           · apply f.unop.hom'.continuous_toFun.isOpen_preimage
             exact IsClopen.isOpen hUIsClopen
         }
-        map_sup' := by exact fun a b ↦ rfl
-        map_inf' := by exact fun a b ↦ rfl
-        map_top' := by exact rfl
-        map_bot' := by exact rfl
+        map_sup' a b := rfl
+        map_inf' a b := rfl
+        map_top' := rfl
+        map_bot' := rfl
       }
       use g
       · exact g.map_top'
@@ -192,20 +185,14 @@ def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
 }
 
 def Hom2 : BoolAlg ⥤ Profiniteᵒᵖ := by refine {
-  obj := by {
-    intro A
-    use TopCat.of (A ⟶ Two)
-    · exact stone_space_is_totally_disconnected A
-    · exact stone_space_is_compact A
-    · exact stone_space_is_hausdorff A
-  }
+  obj := fun A => ⟨TopCat.of (A ⟶ Two), stone_space_is_totally_disconnected A⟩
   map := by {
     intro A B f
     let HomA2 := TopCat.of (A ⟶ Two)
     let HomB2 :=  TopCat.of (B ⟶ Two)
-    let g : HomB2 → HomA2 := fun ϕ ↦ (f ≫ ϕ)
-    use g
-    rw [@continuous_def]
+    use fun ϕ ↦ (f ≫ ϕ)
+    --use g
+    rw [continuous_def]
     intro s hsIsOpen
     sorry
   }
