@@ -191,10 +191,11 @@ def Hom2 : BoolAlg ⥤ Profiniteᵒᵖ := by refine {
     let HomA2 := TopCat.of (A ⟶ Two)
     let HomB2 :=  TopCat.of (B ⟶ Two)
     use fun ϕ ↦ (f ≫ ϕ)
-    --use g
-    rw [continuous_def]
-    intro s hsIsOpen
-    sorry
+    apply continuous_induced_rng.mpr
+    apply continuous_pi
+    intro a
+    dsimp
+    exact (continuous_apply (f a)).comp continuous_induced_dom
   }
 }
 
