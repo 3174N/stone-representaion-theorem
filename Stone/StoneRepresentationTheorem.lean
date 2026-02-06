@@ -21,8 +21,10 @@ instance : T2Space Two := DiscreteTopology.toT2Space
 def stoneEmbed (A : BoolAlg) : (A ⟶ Two) → (A → Bool) := fun f a => f a
 instance {A : BoolAlg} : TopologicalSpace (A ⟶ Two) :=
   TopologicalSpace.induced (stoneEmbed A) inferInstance
-def stoneSubbasis (A : BoolAlg) : Set (Set (TopCat.of (A ⟶ Two))) :=
-  {U | ∃ a : A, U = {ϕ : TopCat.of (A ⟶ Two) | ϕ a = ⊤}}
+def basicSet (A : BoolAlg) (p : A) : Set (TopCat.of (A ⟶ Two)) :=
+  {φ | φ p = ⊤}
+-- def stoneSubbasis (A : BoolAlg) : Set (Set (TopCat.of (A ⟶ Two))) :=
+--   {U | ∃ a : A, U = {ϕ : TopCat.of (A ⟶ Two) | ϕ a = ⊤}}
 
 instance stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)).carrier := by {
   let Prod := A → Two
@@ -151,6 +153,7 @@ instance stone_space_is_totally_disconnected (A : BoolAlg)
 }
 
 lemma projection_is_continuous {A : BoolAlg} {a : A} : Continuous fun (p : A ⟶ Two) => p a := by sorry
+
 lemma fa_is_b_set_is_closed {A : BoolAlg} {a : A} {b : Two} :
 IsClosed {ϕ : TopCat.of (A ⟶ Two) | ϕ a = b} := by {
   let U := {ϕ : TopCat.of (A ⟶ Two) | ϕ a = b}
@@ -160,8 +163,10 @@ IsClosed {ϕ : TopCat.of (A ⟶ Two) | ϕ a = b} := by {
   have hSingletonIsClosed : IsClosed {b} := isClosed_singleton
   exact IsClosed.preimage ContPiA hSingletonIsClosed
 }
+
 lemma fa_is_top_set_is_clopen {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))}
-  (hUIsSetOfFaT : ∃ a : A, U = {ϕ | ϕ a = ⊤}) : IsClopen U := by {
+  (hUIsSetOfFaT : ∃ a : A, U = basicSet A a) : IsClopen U := by {
+    unfold basicSet at hUIsSetOfFaT
     obtain ⟨a, h⟩ := hUIsSetOfFaT
     constructor
     · rw [h]
@@ -191,12 +196,175 @@ lemma fa_is_top_set_is_clopen {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))}
       exact isClosed_compl_iff.mp hUCompIsClosed
 }
 
+lemma basis_of_stone_space {A : BoolAlg} :
+  TopologicalSpace.IsTopologicalBasis (Set.range (fun p : A => basicSet A p)) := by {
+  constructor
+  · intro u₁ hu₁ u₂ hu₂ x hx
+    obtain ⟨p, rfl⟩ := hu₁
+    obtain ⟨q, rfl⟩ := hu₂
+    use basicSet A (p ⊓ q)
+    constructor
+    · exact ⟨p ⊓ q, rfl⟩
+    · constructor
+      · simp only [basicSet, Set.mem_inter_iff, Set.mem_setOf_eq] at hx ⊢
+        rw [map_inf]
+        simp only [hx]
+        rfl
+      · intro φ hφ
+        simp only [basicSet, Set.mem_setOf_eq] at hφ ⊢
+        rw [map_inf] at hφ
+        rw [inf_eq_top_iff] at hφ
+        exact hφ
+  · rw [Set.sUnion_range]
+    refine Set.eq_univ_of_forall (fun φ => ?_)
+    use basicSet A ⊤
+    constructor
+    · exact ⟨⊤, rfl⟩
+    · simp only [basicSet, Set.mem_setOf_eq, map_top]
+  · apply le_antisymm
+    · refine le_generateFrom ?_
+      intro s hs
+      rw [Set.mem_range] at hs
+      obtain ⟨w, h⟩ := hs
+      subst h
+      have : IsClopen (basicSet A w) := by {
+        have : ∃ (a : A), basicSet A w = basicSet A a := by use w
+        exact fa_is_top_set_is_clopen this
+      }
+      exact IsClopen.isOpen this
+    · rw [instTopologicalSpaceHomBoolAlgTwo]
+      refine continuous_iff_le_induced.mp ?_
+      unfold stoneEmbed
+      rw [@continuous_pi_iff]
+      intro i
+      rw [@continuous_discrete_rng]
+      intro b
+      cases b
+      · have : false = ⊥ := rfl
+        rw [this]
+        have h_false : (fun a => (ConcreteCategory.hom a) i) ⁻¹' {⊥} = basicSet A (iᶜ) := by {
+          ext a
+          simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_setOf_eq, basicSet]
+          constructor
+          · intro hiBot
+            rw [map_compl]
+            exact compl_eq_top.mpr hiBot
+          · intro hiCBot
+            rw [map_compl] at hiCBot
+            exact le_compl_self.mp fun a ↦ hiCBot
+        }
+        rw [h_false]
+        apply TopologicalSpace.isOpen_generateFrom_of_mem
+        exact ⟨iᶜ, rfl⟩
+      · have : true = ⊤ := rfl
+        rw [this]
+        have h_true : (fun a => (ConcreteCategory.hom a) i) ⁻¹' {⊤} = basicSet A i := by {
+          ext a
+          simp [basicSet]
+        }
+        rw [h_true]
+        apply TopologicalSpace.isOpen_generateFrom_of_mem
+        exact ⟨i, rfl⟩
+}
+
+noncomputable instance : LinearOrder Two := {
+  le_total := by {
+    intro a b
+    cases a
+    · left
+      exact left_eq_inf.mp rfl
+    · right
+      exact congrFun rfl
+  }
+  toDecidableLE := Classical.decRel LE.le
+  min_def := by {
+    intro a b
+    split
+    next h => simp_all only [inf_of_le_left]
+    next h =>
+      simp_all only [not_le, inf_eq_right]
+      exact Std.le_of_lt h
+  }
+  max_def := by {
+    intro a b
+    split
+    next h => simp_all only [sup_of_le_right]
+    next h =>
+      simp_all only [not_le, sup_eq_left]
+      exact Std.le_of_lt h
+  }
+}
+
+instance : Nontrivial Two := by {
+  rw [@nontrivial_iff_lt]
+  use ⊥
+  use ⊤
+  rfl
+}
+
 lemma clopen_is_fa_is_top {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))} (hUIsClopen : IsClopen U) :
-  ∃! a : A, U = {ϕ | ϕ a = ⊤} := by {
+  ∃! a : A, U = basicSet A a := by {
+  have hUIsCompact : IsCompact U := by {
+    have hUIsClosed : IsClosed U := IsClopen.isClosed hUIsClopen
+    exact IsClosed.isCompact hUIsClosed
+  }
+  have hUUnionOfBasis : U = ⋃₀ {s | (∃ p, s = basicSet A p) ∧ s ⊆ U} := by {
+    have := TopologicalSpace.IsTopologicalBasis.open_eq_sUnion' basis_of_stone_space (IsClopen.isOpen hUIsClopen)
+    grind only [= Set.subset_def, = Set.setOf_true, = Set.mem_range, = Set.mem_empty_iff_false,
+      usr Set.mem_setOf_eq, = Set.setOf_false, = Set.mem_sUnion, ← Set.mem_univ, cases Or]
+  }
+  refine existsUnique_of_exists_of_unique ?_ ?_
+  · let ι : A → Set (TopCat.of (A ⟶ Two)) := fun p => basicSet A p
+    let valid_indices := { p : A | basicSet A p ⊆ U }
+    have h_cover : U ⊆ ⋃ p ∈ valid_indices, ι p := by
+      rw [hUUnionOfBasis]
+      intro x hx
+      obtain ⟨s, ⟨⟨p, rfl⟩, hs_sub⟩, hxs⟩ := hx
+      simp only [Set.mem_iUnion]
+      use p
+      constructor
+      · exact hxs
+      · exact hs_sub
+
+    obtain ⟨t, ht_sub, htFinite, ht_cover⟩ := hUIsCompact.elim_finite_subcover_image
+      (fun p _ => IsClopen.isOpen (fa_is_top_set_is_clopen ⟨p, rfl⟩))
+      h_cover
+
+    lift t to Finset A using htFinite
+
+    use t.sup id
+    apply Set.Subset.antisymm
+    · refine Set.Subset.trans ht_cover ?_
+      intro φ hφ
+      simp only [Set.mem_iUnion, exists_prop] at hφ
+      obtain ⟨p, hp, hφp⟩ := hφ
+      simp only [basicSet, Set.mem_setOf_eq] at hφp ⊢
+      have h_le : p ≤ t.sup id := Finset.le_sup (f := id) hp
+      have h_sup_eq : p ⊔ t.sup id = t.sup id := by {
+        rw [sup_comm]
+        exact sup_of_le_left h_le
+      }
+      apply_fun φ at h_sup_eq
+      rw [map_sup] at h_sup_eq
+      rw [hφp] at h_sup_eq
+      exact h_sup_eq.symm
+    · simp only [basicSet]
+      intro φ hφ
+      change (ConcreteCategory.hom φ) (t.sup id) = ⊤ at hφ
+      rw [map_finset_sup] at hφ
+      simp at hφ
+      rw [@Finset.sup_eq_top_iff] at hφ
+      obtain ⟨p, hp_mem, hp_val⟩ := hφ
+      have hp_subset : basicSet A p ⊆ U := ht_sub hp_mem
+      apply hp_subset
+      exact hp_val
+  · intro a b ha hb
+    simp [basicSet] at ha hb
+    rw [ha] at hb
     sorry
 }
 
-def Clop : Profiniteᵒᵖ ⥤ BoolAlg := by refine {
+def Clop : Profiniteᵒᵖ ⥤ BoolAlg := {
     obj := fun X => BoolAlg.of (TopologicalSpace.Clopens X.unop)
     map := by {
       intro X Y f
@@ -234,7 +402,7 @@ def Hom2 : BoolAlg ⥤ Profiniteᵒᵖ := by refine {
     apply continuous_induced_rng.mpr
     apply continuous_pi
     intro a
-    dsimp
+    --dsimp
     exact (continuous_apply (f a)).comp continuous_induced_dom
   }
 }
@@ -303,8 +471,7 @@ def StoneIsomorphism (A : BoolAlg) : ((𝟭 BoolAlg).obj A) ⟶ ((Hom2 ⋙ Clop)
   · exact g.map_bot'
 }
 
-
-def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolAlg).obj A) := by {
+noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolAlg).obj A) := by {
   let g : BoundedLatticeHom ((Hom2 ⋙ Clop).obj A) ((𝟭 BoolAlg).obj A) := by refine {
     toFun := fun U => Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
     map_sup' := by {
@@ -337,14 +504,14 @@ def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolA
   · exact g.map_bot'
 }
 
-def StoneRepresentationEquivalence : BoolAlg ≌ Profiniteᵒᵖ := by refine {
+noncomputable def StoneRepresentationEquivalence : BoolAlg ≌ Profiniteᵒᵖ := by refine {
   functor := Hom2
   inverse := Clop
-  unitIso := by refine {
-    hom := by refine {
+  unitIso := {
+    hom := {
       app := fun A => StoneIsomorphism A
     }
-    inv := by refine {
+    inv := {
       app := fun A => StoneIsomorphismInv A
       naturality := sorry
     }
