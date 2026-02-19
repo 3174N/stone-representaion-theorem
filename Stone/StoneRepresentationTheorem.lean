@@ -530,39 +530,98 @@ def StoneIsomorphism (A : BoolAlg) : ((𝟭 BoolAlg).obj A) ⟶ ((Hom2 ⋙ Clop)
   · exact g.map_bot'
 }
 
-noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolAlg).obj A) := by {
+lemma sup_basics_basic_sup {A : BoolAlg} {a b : A} :
+  basicSet a ⊔ basicSet b = basicSet (a ⊔ b) := by {
+    apply Set.ext
+    intro ϕ
+    constructor
+    · sorry
+    · sorry
+  }
+
+lemma inf_basics_basic_inf {A : BoolAlg} {a b : A} :
+  basicSet a ⊓ basicSet b = basicSet (a ⊓ b) := by {
+    sorry
+  }
+
+lemma basic_top_eq_top {A : BoolAlg} : basicSet (⊤ : A) = ⊤ := by {
+  sorry
+}
+
+lemma basic_bot_eq_bot {A : BoolAlg} : basicSet (⊥ : A) = ⊥ := by {
+  sorry
+}
+
+noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolAlg).obj A)
+:= by {
   let g : BoundedLatticeHom ((Hom2 ⋙ Clop).obj A) ((𝟭 BoolAlg).obj A) := by refine {
     toFun := fun U => Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
     map_sup' := by {
       intro U V
       change TopologicalSpace.Clopens (A ⟶ Two) at U
       change TopologicalSpace.Clopens (A ⟶ Two) at V
-      -- obtain ⟨a, h_U_is_basic_a, h_U_a_unique⟩ :=
-      --   clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U)
-      -- obtain ⟨b, h_V_is_basic_b, h_U_b_unique⟩ :=
-      --   clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V)
-      -- obtain ⟨c, h_U_sup_V_is_basic_c, h_U_sup_V_c_unique⟩ :=
-      --   clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V))
-
       let a := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
       let b := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))
       let c := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V)))
-      have hUIsPhiaTop : (U : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ a = ⊤} := by {
-        exact (Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))).1
-      }
-      have hVIsPhibTop : (V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ b = ⊤} := by {
-        exact (Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))).1
-      }
-      have hUsupVIsPhiaSupbTop : (U ⊔ V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ c = ⊤}
-        := (Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V)))).1
-      suffices (U ⊔ V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ (a ⊔ b) = ⊤} by {
-        sorry
-      }
-      sorry
+      suffices a ⊔ b = c by exact id (Eq.symm this)
+      obtain h_a_is_unique_U :=
+        Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
+      obtain h_b_is_unique_V :=
+        Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))
+      obtain h_c_is_unique_U_sup_V :=
+        Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V)))
+      apply h_c_is_unique_U_sup_V.2
+      suffices ↑(↑(U)⊔ ↑(V)) = basicSet (a ⊔ b) by exact this
+      rw [h_a_is_unique_U.1, h_b_is_unique_V.1]
+      exact sup_basics_basic_sup
     }
-    map_inf' := sorry
-    map_top' := sorry
-    map_bot' := sorry
+    map_inf' := by {
+      intro U V
+      change TopologicalSpace.Clopens (A ⟶ Two) at U
+      change TopologicalSpace.Clopens (A ⟶ Two) at V
+      let a := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
+      let b := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))
+      let c := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊓ V)))
+      suffices a ⊓ b = c by exact id (Eq.symm this)
+      obtain h_a_is_unique_U :=
+        Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
+      obtain h_b_is_unique_V :=
+        Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))
+      obtain h_c_is_unique_U_inf_V :=
+        Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊓ V)))
+      apply h_c_is_unique_U_inf_V.2
+      suffices ↑(↑(U) ⊓ ↑(V)) = basicSet (a ⊓ b) by exact this
+      rw [h_a_is_unique_U.1, h_b_is_unique_V.1]
+      exact inf_basics_basic_inf
+    }
+    map_top' := by {
+      let a := Classical.choose (
+          clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (⊤ : ((Hom2 ⋙ Clop).obj A)))
+        )
+      suffices a = ⊤ by exact this
+      obtain h_a_is_unique_top :=
+        Exists.choose_spec (
+            clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (⊤ : ((Hom2 ⋙ Clop).obj A)))
+          )
+      apply Eq.symm
+      apply h_a_is_unique_top.2
+      apply Eq.symm
+      exact basic_top_eq_top
+    }
+    map_bot' := by {
+      let a := Classical.choose (
+          clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (⊥ : ((Hom2 ⋙ Clop).obj A)))
+        )
+      suffices a = ⊥ by exact this
+      obtain h_a_is_unique_bot :=
+        Exists.choose_spec (
+            clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (⊥ : ((Hom2 ⋙ Clop).obj A)))
+          )
+      apply Eq.symm
+      apply h_a_is_unique_bot.2
+      apply Eq.symm
+      exact basic_bot_eq_bot
+    }
   }
   use g
   · exact g.map_top'
