@@ -8,6 +8,8 @@ import Mathlib.Order.Hom.BoundedLattice
 import Mathlib.Topology.Category.TopCat.Basic
 import Mathlib.Topology.Separation.Hausdorff
 import Mathlib.Data.FunLike.Basic
+import Mathlib.Order.SymmDiff
+import Stone.ExistsNonZeroHomomorphism
 
 open CategoryTheory
 
@@ -21,7 +23,7 @@ instance : T2Space Two := DiscreteTopology.toT2Space
 def stoneEmbed (A : BoolAlg) : (A ⟶ Two) → (A → Bool) := fun f a => f a
 instance {A : BoolAlg} : TopologicalSpace (A ⟶ Two) :=
   TopologicalSpace.induced (stoneEmbed A) inferInstance
-def basicSet (A : BoolAlg) (p : A) : Set (TopCat.of (A ⟶ Two)) :=
+def basicSet {A : BoolAlg} (p : A) : Set (TopCat.of (A ⟶ Two)) :=
   {φ | φ p = ⊤}
 -- def stoneSubbasis (A : BoolAlg) : Set (Set (TopCat.of (A ⟶ Two))) :=
 --   {U | ∃ a : A, U = {ϕ : TopCat.of (A ⟶ Two) | ϕ a = ⊤}}
@@ -165,7 +167,7 @@ IsClosed {ϕ : TopCat.of (A ⟶ Two) | ϕ a = b} := by {
 }
 
 lemma fa_is_top_set_is_clopen {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))}
-  (hUIsSetOfFaT : ∃ a : A, U = basicSet A a) : IsClopen U := by {
+  (hUIsSetOfFaT : ∃ a : A, U = basicSet a) : IsClopen U := by {
     unfold basicSet at hUIsSetOfFaT
     obtain ⟨a, h⟩ := hUIsSetOfFaT
     constructor
@@ -197,12 +199,12 @@ lemma fa_is_top_set_is_clopen {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))}
 }
 
 lemma basis_of_stone_space {A : BoolAlg} :
-  TopologicalSpace.IsTopologicalBasis (Set.range (fun p : A => basicSet A p)) := by {
+  TopologicalSpace.IsTopologicalBasis (Set.range (fun p : A => basicSet p)) := by {
   constructor
   · intro u₁ hu₁ u₂ hu₂ x hx
     obtain ⟨p, rfl⟩ := hu₁
     obtain ⟨q, rfl⟩ := hu₂
-    use basicSet A (p ⊓ q)
+    use basicSet (p ⊓ q)
     constructor
     · exact ⟨p ⊓ q, rfl⟩
     · constructor
@@ -217,7 +219,7 @@ lemma basis_of_stone_space {A : BoolAlg} :
         exact hφ
   · rw [Set.sUnion_range]
     refine Set.eq_univ_of_forall (fun φ => ?_)
-    use basicSet A ⊤
+    use basicSet ⊤
     constructor
     · exact ⟨⊤, rfl⟩
     · simp only [basicSet, Set.mem_setOf_eq, map_top]
@@ -227,8 +229,8 @@ lemma basis_of_stone_space {A : BoolAlg} :
       rw [Set.mem_range] at hs
       obtain ⟨w, h⟩ := hs
       subst h
-      have : IsClopen (basicSet A w) := by {
-        have : ∃ (a : A), basicSet A w = basicSet A a := by use w
+      have : IsClopen (basicSet w) := by {
+        have : ∃ (a : A), basicSet w = basicSet a := by use w
         exact fa_is_top_set_is_clopen this
       }
       exact IsClopen.isOpen this
@@ -242,7 +244,7 @@ lemma basis_of_stone_space {A : BoolAlg} :
       cases b
       · have : false = ⊥ := rfl
         rw [this]
-        have h_false : (fun a => (ConcreteCategory.hom a) i) ⁻¹' {⊥} = basicSet A (iᶜ) := by {
+        have h_false : (fun a => (ConcreteCategory.hom a) i) ⁻¹' {⊥} = basicSet (iᶜ) := by {
           ext a
           simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_setOf_eq, basicSet]
           constructor
@@ -258,7 +260,7 @@ lemma basis_of_stone_space {A : BoolAlg} :
         exact ⟨iᶜ, rfl⟩
       · have : true = ⊤ := rfl
         rw [this]
-        have h_true : (fun a => (ConcreteCategory.hom a) i) ⁻¹' {⊤} = basicSet A i := by {
+        have h_true : (fun a => (ConcreteCategory.hom a) i) ⁻¹' {⊤} = basicSet i := by {
           ext a
           simp [basicSet]
         }
@@ -302,20 +304,74 @@ instance : Nontrivial Two := by {
   rfl
 }
 
+lemma diffs_bot_a_eq_b {A : BoolAlg} {a b : A} (h_diffs_are_bot : a \ b = ⊥ ∧ b \ a = ⊥) : a = b
+:= by {
+  have h_a_sdiff_b_neq_bot : symmDiff a b = ⊥ := by {
+    simp_all only [sdiff_eq_bot_iff, symmDiff_eq_bot]
+    obtain ⟨ h_a_leq_b, h_b_leq_a ⟩ := h_diffs_are_bot
+    apply le_antisymm
+    · exact h_a_leq_b
+    · exact h_b_leq_a
+  }
+  rw [←symmDiff_eq_bot]
+  exact h_a_sdiff_b_neq_bot
+}
+
+lemma a_neq_b_diff_neq_bot {A : BoolAlg} {a b : A} (h_a_neq_b : a ≠ b) : a \ b ≠ ⊥ ∨ b \ a ≠ ⊥
+:= by{
+  by_contra!
+  have h_a_eq_b : a = b := diffs_bot_a_eq_b this
+  subst h_a_eq_b
+  simp_all [ne_eq, not_true_eq_false]
+}
+
+lemma a_diff_b_neq_bot_exist {A : BoolAlg} {a b : A} (h_a_diff_b_neq_bot : a \ b ≠ ⊥) :
+  ∃ (ϕ : A ⟶ Two), ϕ a = ⊤ ∧ ϕ b = ⊥ := by {
+    obtain ⟨ϕ, h⟩ := (nonzero_homomorphism A Two (a \ b) h_a_diff_b_neq_bot)
+    use ϕ
+    have h_phi_ab : (ϕ a) ⊓ (ϕ (bᶜ)) = ⊤ := by {
+      rw [Eq.symm (LatticeHomClass.map_inf (ConcreteCategory.hom ϕ) a bᶜ)]
+      rw [← BooleanAlgebra.sdiff_eq a b]
+      exact h
+    }
+    rw [inf_eq_top_iff] at h_phi_ab
+    simp_all only [ne_eq, sdiff_eq_bot_iff, map_sdiff, top_sdiff',
+      hnot_eq_compl, compl_eq_top, map_compl, compl_bot, and_true]
+  }
+
+lemma a_diff_b_ne_bot_ne {A : BoolAlg} {a b : A} (h_a_diff_b_ne_bot : a \ b ≠ ⊥) :
+  {φ : A ⟶ Two | φ a = ⊤} ≠ {φ : A ⟶ Two | φ b = ⊤} := by {
+    obtain ⟨ϕ, h_phi_a_top, h_phi_b_bot⟩ := a_diff_b_neq_bot_exist h_a_diff_b_ne_bot
+    have h_phi_in_a_top : ϕ ∈ {φ | φ a = ⊤} := h_phi_a_top
+    have h_phi_not_in_b_top : ϕ ∉ {φ | φ b = ⊤} := by {
+      by_contra!
+      have h_phi_b_top : ϕ b = ⊤ := this
+      have h_bot_phi_b : ⊥ = ϕ b := by {
+        apply Eq.symm
+        exact h_phi_b_bot
+      }
+      have h_bot_is_top : ⊥ = ⊤ := by {
+        exact Eq.trans h_bot_phi_b h_phi_b_top
+      }
+      exact bot_ne_top h_bot_is_top
+    }
+    exact ne_of_mem_of_not_mem' h_phi_a_top h_phi_not_in_b_top
+  }
+
 lemma clopen_is_fa_is_top {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))} (hUIsClopen : IsClopen U) :
-  ∃! a : A, U = basicSet A a := by {
+  ∃! a : A, U = basicSet a := by {
   have hUIsCompact : IsCompact U := by {
     have hUIsClosed : IsClosed U := IsClopen.isClosed hUIsClopen
     exact IsClosed.isCompact hUIsClosed
   }
-  have hUUnionOfBasis : U = ⋃₀ {s | (∃ p, s = basicSet A p) ∧ s ⊆ U} := by {
+  have hUUnionOfBasis : U = ⋃₀ {s | (∃ p, s = basicSet p) ∧ s ⊆ U} := by {
     have := TopologicalSpace.IsTopologicalBasis.open_eq_sUnion' basis_of_stone_space (IsClopen.isOpen hUIsClopen)
     grind only [= Set.subset_def, = Set.setOf_true, = Set.mem_range, = Set.mem_empty_iff_false,
       usr Set.mem_setOf_eq, = Set.setOf_false, = Set.mem_sUnion, ← Set.mem_univ, cases Or]
   }
   refine existsUnique_of_exists_of_unique ?_ ?_
-  · let ι : A → Set (TopCat.of (A ⟶ Two)) := fun p => basicSet A p
-    let valid_indices := { p : A | basicSet A p ⊆ U }
+  · let ι : A → Set (TopCat.of (A ⟶ Two)) := fun p => basicSet p
+    let valid_indices := { p : A | basicSet p ⊆ U }
     have h_cover : U ⊆ ⋃ p ∈ valid_indices, ι p := by
       rw [hUUnionOfBasis]
       intro x hx
@@ -355,13 +411,17 @@ lemma clopen_is_fa_is_top {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))} (hUIsC
       simp at hφ
       rw [@Finset.sup_eq_top_iff] at hφ
       obtain ⟨p, hp_mem, hp_val⟩ := hφ
-      have hp_subset : basicSet A p ⊆ U := ht_sub hp_mem
+      have hp_subset : basicSet p ⊆ U := ht_sub hp_mem
       apply hp_subset
       exact hp_val
   · intro a b ha hb
     simp [basicSet] at ha hb
     rw [ha] at hb
-    sorry
+    by_contra!
+    have h_ab_neq_bot : a \ b ≠ ⊥ ∨ b \ a ≠ ⊥ := a_neq_b_diff_neq_bot this
+    rcases h_ab_neq_bot with h_a_diff_b_neq_bot | h_b_diff_a_neq_bot
+    · exact (a_diff_b_ne_bot_ne (h_a_diff_b_neq_bot)) hb
+    · exact (a_diff_b_ne_bot_ne (h_b_diff_a_neq_bot)) (Eq.symm hb)
 }
 
 def Clop : Profiniteᵒᵖ ⥤ BoolAlg := {
@@ -402,7 +462,6 @@ def Hom2 : BoolAlg ⥤ Profiniteᵒᵖ := by refine {
     apply continuous_induced_rng.mpr
     apply continuous_pi
     intro a
-    --dsimp
     exact (continuous_apply (f a)).comp continuous_induced_dom
   }
 }
@@ -478,6 +537,13 @@ noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) �
       intro U V
       change TopologicalSpace.Clopens (A ⟶ Two) at U
       change TopologicalSpace.Clopens (A ⟶ Two) at V
+      -- obtain ⟨a, h_U_is_basic_a, h_U_a_unique⟩ :=
+      --   clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U)
+      -- obtain ⟨b, h_V_is_basic_b, h_U_b_unique⟩ :=
+      --   clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V)
+      -- obtain ⟨c, h_U_sup_V_is_basic_c, h_U_sup_V_c_unique⟩ :=
+      --   clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V))
+
       let a := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
       let b := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))
       let c := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V)))
@@ -487,9 +553,8 @@ noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) �
       have hVIsPhibTop : (V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ b = ⊤} := by {
         exact (Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen V))).1
       }
-      have hUsupVIsPhiaSupbTop : (U ⊔ V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ c = ⊤} := by {
-        exact (Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V)))).1
-      }
+      have hUsupVIsPhiaSupbTop : (U ⊔ V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ c = ⊤}
+        := (Exists.choose_spec (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (U ⊔ V)))).1
       suffices (U ⊔ V : Set (TopCat.of (A ⟶ Two))) = {ϕ | ϕ (a ⊔ b) = ⊤} by {
         sorry
       }

@@ -32,7 +32,7 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
   let I' := Order.Ideal.principal pᶜ
   have : pᶜ ≠ ⊤ := comp_non_bot_is_non_top A p pNonZero
   have hITProper : I'.IsProper := non_top_principal_is_proper A pᶜ this
-  obtain ⟨ I, hI ⟩ := exists_maximal_ideal A I' hITProper
+  obtain ⟨ I, hI ⟩ := exists_maximal_ideal hITProper
   obtain ⟨ hIMax, hIGeIT ⟩ := hI
 
   classical

@@ -3,7 +3,7 @@ import Mathlib.Order.Category.BoolAlg
 import Mathlib.Order.Ideal
 import Mathlib.Order.Zorn
 
-lemma exists_maximal_ideal (A : BoolAlg) (I : Order.Ideal A) (hIProper : I.IsProper)
+lemma exists_maximal_ideal {A : BoolAlg} {I : Order.Ideal A} (hIProper : I.IsProper)
   : ∃ I' : Order.Ideal A, I'.IsMaximal ∧ I ≤ I' := by
   {
     let s := { J : Order.Ideal A | I ≤ J ∧ J.IsProper}
