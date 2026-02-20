@@ -9,6 +9,7 @@ import Mathlib.Topology.Category.TopCat.Basic
 import Mathlib.Topology.Separation.Hausdorff
 import Mathlib.Data.FunLike.Basic
 import Mathlib.Order.SymmDiff
+import Mathlib.Topology.ContinuousMap.Defs
 import Stone.ExistsNonZeroHomomorphism
 
 open CategoryTheory
@@ -23,12 +24,13 @@ instance : T2Space Two := DiscreteTopology.toT2Space
 def stoneEmbed (A : BoolAlg) : (A ⟶ Two) → (A → Bool) := fun f a => f a
 instance {A : BoolAlg} : TopologicalSpace (A ⟶ Two) :=
   TopologicalSpace.induced (stoneEmbed A) inferInstance
-def basicSet {A : BoolAlg} (p : A) : Set (TopCat.of (A ⟶ Two)) :=
-  {φ | φ p = ⊤}
+
+def basicSet {A : BoolAlg} (a : A) : Set (TopCat.of (A ⟶ Two)) :=
+  {φ | φ a = ⊤}
 -- def stoneSubbasis (A : BoolAlg) : Set (Set (TopCat.of (A ⟶ Two))) :=
 --   {U | ∃ a : A, U = {ϕ : TopCat.of (A ⟶ Two) | ϕ a = ⊤}}
 
-instance stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ Two)).carrier := by {
+instance {A : BoolAlg} : CompactSpace (A ⟶ Two) := by {
   let Prod := A → Two
   let Homs : Set Prod := { φ |  φ : (A ⟶ Two) }
   have hProdImpliesHom :
@@ -103,7 +105,7 @@ instance stone_space_is_compact (A : BoolAlg) : CompactSpace (TopCat.of (A ⟶ T
   exact CompactSpace.isCompact_univ
 }
 
-instance stone_space_is_hausdorff (A : BoolAlg) : T2Space (TopCat.of (A ⟶ Two)).carrier := by {
+instance {A : BoolAlg} : T2Space (A ⟶ Two) := by {
   let Homs : Set (A → Two) := { φ |  φ : (A ⟶ Two) }
 
   have hInducing : Topology.IsInducing (fun f : A ⟶ Two ↦ (f : (A → Two))) := {
@@ -628,6 +630,88 @@ noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) �
   · exact g.map_bot'
 }
 
+noncomputable def StoneCoIsomorphism (X : Profiniteᵒᵖ) : ((Clop ⋙ Hom2).obj X) ⟶ ((𝟭 Profiniteᵒᵖ).obj X) := by {
+  classical
+  let g : ContinuousMap ((𝟭 Profiniteᵒᵖ).obj X).unop ((Clop ⋙ Hom2).obj X).unop := by refine {
+    toFun := by {
+      intro x
+      let ϕ : BoundedLatticeHom (Clop.obj X) Two := by refine {
+        toFun := by {
+          intro U
+          change TopologicalSpace.Clopens X.unop at U
+          exact if x ∈ U then ⊤ else ⊥
+        }
+        map_sup' := by {
+          intro U V
+          change TopologicalSpace.Clopens X.unop at U
+          change TopologicalSpace.Clopens X.unop at V
+          simp only [Functor.id_obj, id_eq]
+          let a := (if x ∈ U then (⊤ : Two) else (⊥ : Two))
+          let b := (if x ∈ V then (⊤ : Two) else (⊥ : Two))
+          let c := (if x ∈ U ⊔ V then (⊤ : Two) else (⊥ : Two))
+          have h_x_in_or_nin : x ∈ U ∨ x ∉ U := by {
+            exact Classical.em (x ∈ U)
+          }
+          rcases h_x_in_or_nin with h_x_in_U | h_x_nin_U
+          · have h_x_in_U_sup_V : x ∈ U ⊔ V := by {
+              apply Set.mem_union_left
+              exact h_x_in_U
+            }
+            have h_c_eq_top : c = (⊤ : Two) := by {
+              exact if_pos h_x_in_U_sup_V
+            }
+            have h_a_eq_top : a = (⊤ : Two) := by {
+              exact if_pos h_x_in_U
+            }
+            simp_all only [↓reduceIte]
+            simp [le_top]
+          · have h_a_eq_bot : a = (⊥ : Two) := by {
+              exact if_neg h_x_nin_U
+            }
+            have h : x ∈ V ↔ x ∈ U ⊔ V := by {
+              constructor
+              · apply Set.mem_union_right
+              · have h_union_is_sup : (U : Set X.unop) ∪ (V : Set X.unop) = U ⊔ V := rfl
+                suffices x ∈ (U : Set X.unop) ∪ (V : Set X.unop) → x ∈ V by exact this
+                rw [Set.mem_union]
+                intro h
+                simp_all only [Functor.id_obj, TopologicalSpace.Clopens.coe_sup, SetLike.mem_coe, false_or]
+            }
+            simp_all only [↓reduceIte]
+            rw [←h]
+            simp [bot_le]
+        }
+        map_inf' := sorry
+        map_top' := sorry
+        map_bot' := sorry
+      }
+      use ϕ
+      · exact ϕ.map_top'
+      · exact ϕ.map_bot'
+    }
+    continuous_toFun := sorry
+  }
+  use g
+  rw [@continuous_def]
+  sorry
+}
+
+def StoneCoIsomorphismInv (X : Profiniteᵒᵖ) : ((𝟭 Profiniteᵒᵖ).obj X) ⟶ ((Clop ⋙ Hom2).obj X) := by {sorry}
+
+def basicClopen {A : BoolAlg} (a : A) : TopologicalSpace.Clopens (A ⟶ Two) := by {
+  use {φ | φ a = ⊤}
+  apply fa_is_top_set_is_clopen
+  use a
+  rfl
+}
+
+lemma clopen_basic_clopen {A : BoolAlg} (U : TopologicalSpace.Clopens (A ⟶ Two)) : ∃!a, U = basicClopen a := by {sorry}
+
+lemma basic_set_clop_hom_map {A B : BoolAlg} {f : A ⟶ B} {a : A} :
+((Hom2 ⋙ Clop).map f) (basicClopen a) = basicClopen (f a) := by {sorry}
+
+lemma basic_set_stone_inv_hom_map {A : BoolAlg} {a : A} : (((StoneIsomorphismInv A)) (basicClopen a)) = a := by {sorry}
+
 noncomputable def StoneRepresentationEquivalence : BoolAlg ≌ Profiniteᵒᵖ := by refine {
   functor := Hom2
   inverse := Clop
@@ -637,8 +721,38 @@ noncomputable def StoneRepresentationEquivalence : BoolAlg ≌ Profiniteᵒᵖ :
     }
     inv := {
       app := fun A => StoneIsomorphismInv A
-      naturality := sorry
+      naturality := by {
+        intro A B f
+        rw [@BoolAlg.hom_ext_iff]
+        rw [@BoundedLatticeHom.ext_iff]
+        intro U
+        change TopologicalSpace.Clopens (Hom2.obj A).unop at U
+        obtain ⟨ϕ, h_U_basic_phi, h_phi_unique⟩ := clopen_basic_clopen U
+        rw [@BoolAlg.coe_comp]
+        rw [@BoolAlg.comp_apply]
+        rw [@Function.comp_apply]
+        rw [h_U_basic_phi]
+        rw [basic_set_clop_hom_map]
+        rw [basic_set_stone_inv_hom_map]
+        rw [basic_set_stone_inv_hom_map]
+        rw [@Functor.id_map]
+        rfl
+      }
     }
+    hom_inv_id := by {sorry}
+    inv_hom_id := by {sorry}
   }
-  counitIso := by sorry
+  counitIso := {
+    hom := {
+      app := fun X => StoneCoIsomorphism X
+    }
+    inv := {
+      app := fun X => StoneCoIsomorphismInv X
+      naturality := by {
+        sorry
+      }
+    }
+    hom_inv_id := by {sorry}
+    inv_hom_id := by {sorry}
+  }
 }
