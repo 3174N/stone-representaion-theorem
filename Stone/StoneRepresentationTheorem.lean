@@ -156,7 +156,8 @@ instance stone_space_is_totally_disconnected (A : BoolAlg)
   exact hEmbedding.injective.subsingleton_image_iff.mp h_img_sub
 }
 
-lemma projection_is_continuous {A : BoolAlg} {a : A} : Continuous fun (p : A ⟶ Two) => p a := by sorry
+lemma projection_is_continuous {A : BoolAlg} {a : A} :
+Continuous fun (p : A ⟶ Two) => p a := by {sorry}
 
 lemma fa_is_b_set_is_closed {A : BoolAlg} {a : A} {b : Two} :
 IsClosed {ϕ : TopCat.of (A ⟶ Two) | ϕ a = b} := by {
@@ -554,7 +555,8 @@ lemma basic_bot_eq_bot {A : BoolAlg} : basicSet (⊥ : A) = ⊥ := by {
   sorry
 }
 
-noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolAlg).obj A)
+noncomputable def StoneIsomorphismInv (A : BoolAlg) :
+((Hom2 ⋙ Clop).obj A) ⟶ ((𝟭 BoolAlg).obj A)
 := by {
   let g : BoundedLatticeHom ((Hom2 ⋙ Clop).obj A) ((𝟭 BoolAlg).obj A) := by refine {
     toFun := fun U => Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen U))
@@ -630,7 +632,8 @@ noncomputable def StoneIsomorphismInv (A : BoolAlg) : ((Hom2 ⋙ Clop).obj A) �
   · exact g.map_bot'
 }
 
-noncomputable def StoneCoIsomorphism (X : Profiniteᵒᵖ) : ((Clop ⋙ Hom2).obj X) ⟶ ((𝟭 Profiniteᵒᵖ).obj X) := by {
+noncomputable def StoneCoIsomorphism (X : Profiniteᵒᵖ) :
+((Clop ⋙ Hom2).obj X) ⟶ ((𝟭 Profiniteᵒᵖ).obj X) := by {
   classical
   let g : ContinuousMap ((𝟭 Profiniteᵒᵖ).obj X).unop ((Clop ⋙ Hom2).obj X).unop := by refine {
     toFun := by {
@@ -696,7 +699,8 @@ noncomputable def StoneCoIsomorphism (X : Profiniteᵒᵖ) : ((Clop ⋙ Hom2).ob
   sorry
 }
 
-def StoneCoIsomorphismInv (X : Profiniteᵒᵖ) : ((𝟭 Profiniteᵒᵖ).obj X) ⟶ ((Clop ⋙ Hom2).obj X) := by {sorry}
+def StoneCoIsomorphismInv (X : Profiniteᵒᵖ) :
+((𝟭 Profiniteᵒᵖ).obj X) ⟶ ((Clop ⋙ Hom2).obj X) := by {sorry}
 
 def basicClopen {A : BoolAlg} (a : A) : TopologicalSpace.Clopens (A ⟶ Two) := by {
   use {φ | φ a = ⊤}
@@ -705,12 +709,28 @@ def basicClopen {A : BoolAlg} (a : A) : TopologicalSpace.Clopens (A ⟶ Two) := 
   rfl
 }
 
-lemma clopen_basic_clopen {A : BoolAlg} (U : TopologicalSpace.Clopens (A ⟶ Two)) : ∃!a, U = basicClopen a := by {sorry}
+lemma clopen_basic_clopen {A : BoolAlg} (U : TopologicalSpace.Clopens (A ⟶ Two)) :
+∃!a, U = basicClopen a := by {sorry}
 
 lemma basic_set_clop_hom_map {A B : BoolAlg} {f : A ⟶ B} {a : A} :
-((Hom2 ⋙ Clop).map f) (basicClopen a) = basicClopen (f a) := by {sorry}
+((Hom2 ⋙ Clop).map f) (basicClopen a) = basicClopen (f a) := by {
+  apply TopologicalSpace.Clopens.ext
+  apply Set.ext
+  intro φ
+  apply Set.mem_setOf
+}
 
-lemma basic_set_stone_inv_hom_map {A : BoolAlg} {a : A} : (((StoneIsomorphismInv A)) (basicClopen a)) = a := by {sorry}
+lemma basic_set_stone_inv_hom_map {A : BoolAlg} {a : A} :
+(((StoneIsomorphismInv A)) (basicClopen a)) = a := by {
+  let b := Classical.choose (
+    clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (basicClopen a)))
+  change b = a
+  apply Eq.symm
+  obtain ⟨_, hr⟩ := Classical.choose_spec (
+    clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen (basicClopen a)))
+  apply hr
+  rfl
+}
 
 noncomputable def StoneRepresentationEquivalence : BoolAlg ≌ Profiniteᵒᵖ := by refine {
   functor := Hom2
