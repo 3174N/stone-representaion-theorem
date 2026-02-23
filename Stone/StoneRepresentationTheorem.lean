@@ -535,24 +535,34 @@ def StoneIsomorphism (A : BoolAlg) : ((𝟭 BoolAlg).obj A) ⟶ ((Hom2 ⋙ Clop)
 
 lemma sup_basics_basic_sup {A : BoolAlg} {a b : A} :
   basicSet a ⊔ basicSet b = basicSet (a ⊔ b) := by {
+    unfold basicSet
+    simp only [Set.sup_eq_union, map_sup, max_eq_top]
     apply Set.ext
     intro ϕ
     constructor
-    · sorry
-    · sorry
+    · exact fun a ↦ a
+    · exact fun a ↦ a
   }
 
 lemma inf_basics_basic_inf {A : BoolAlg} {a b : A} :
   basicSet a ⊓ basicSet b = basicSet (a ⊓ b) := by {
-    sorry
-  }
+  unfold basicSet
+  simp only [Set.inf_eq_inter, map_inf, inf_eq_top_iff]
+  apply Set.ext
+  intro ϕ
+  constructor
+  · exact fun a ↦ a
+  · exact fun a ↦ a
+}
 
 lemma basic_top_eq_top {A : BoolAlg} : basicSet (⊤ : A) = ⊤ := by {
-  sorry
+  unfold basicSet
+  simp only [map_top, Set.setOf_true, Set.top_eq_univ]
 }
 
 lemma basic_bot_eq_bot {A : BoolAlg} : basicSet (⊥ : A) = ⊥ := by {
-  sorry
+  unfold basicSet
+  simp only [map_bot, bot_ne_top, Set.setOf_false, Set.bot_eq_empty]
 }
 
 noncomputable def StoneIsomorphismInv (A : BoolAlg) :
