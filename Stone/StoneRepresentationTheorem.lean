@@ -157,7 +157,9 @@ instance stone_space_is_totally_disconnected (A : BoolAlg)
 }
 
 lemma projection_is_continuous {A : BoolAlg} {a : A} :
-Continuous fun (p : A ⟶ Two) => p a := by {sorry}
+Continuous fun (p : A ⟶ Two) => p a := by {
+  exact (continuous_apply a).comp continuous_induced_dom
+}
 
 lemma fa_is_b_set_is_closed {A : BoolAlg} {a : A} {b : Two} :
 IsClosed {ϕ : TopCat.of (A ⟶ Two) | ϕ a = b} := by {
@@ -368,7 +370,8 @@ lemma clopen_is_fa_is_top {A : BoolAlg} {U : Set (TopCat.of (A ⟶ Two))} (hUIsC
     exact IsClosed.isCompact hUIsClosed
   }
   have hUUnionOfBasis : U = ⋃₀ {s | (∃ p, s = basicSet p) ∧ s ⊆ U} := by {
-    have := TopologicalSpace.IsTopologicalBasis.open_eq_sUnion' basis_of_stone_space (IsClopen.isOpen hUIsClopen)
+    have := TopologicalSpace.IsTopologicalBasis.open_eq_sUnion'
+            basis_of_stone_space (IsClopen.isOpen hUIsClopen)
     grind only [= Set.subset_def, = Set.setOf_true, = Set.mem_range, = Set.mem_empty_iff_false,
       usr Set.mem_setOf_eq, = Set.setOf_false, = Set.mem_sUnion, ← Set.mem_univ, cases Or]
   }
@@ -650,7 +653,27 @@ def basicClopen {A : BoolAlg} (a : A) : TopologicalSpace.Clopens (A ⟶ Two) := 
 }
 
 lemma clopen_basic_clopen {A : BoolAlg} (U : TopologicalSpace.Clopens (A ⟶ Two)) :
-∃!a, U = basicClopen a := by {sorry}
+∃!a, U = basicClopen a := by {
+  unfold basicClopen
+  suffices ∃!a, U.carrier = basicSet a by {
+    obtain ⟨ a, ha ⟩ := this
+    unfold basicSet at ha
+    use a
+    dsimp
+    dsimp at ha
+    apply And.intro
+
+    · have : U.carrier = { φ | (ConcreteCategory.hom φ) a = ⊤ } := ha.left
+      exact TopologicalSpace.Clopens.ext this
+    · intro y hy
+      have : U.carrier = { φ | (ConcreteCategory.hom φ) y = ⊤ } := by {
+        subst hy
+        simp_all only
+      }
+      exact ha.right y this
+  }
+  exact clopen_is_fa_is_top U.isClopen'
+}
 
 lemma basic_set_clop_hom_map {A B : BoolAlg} {f : A ⟶ B} {a : A} :
 ((Hom2 ⋙ Clop).map f) (basicClopen a) = basicClopen (f a) := by {
