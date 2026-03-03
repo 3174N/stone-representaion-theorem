@@ -1,4 +1,4 @@
-import Stone.StoneRepresentationTheorem
+import Stone.Defs
 
 open CategoryTheory
 
@@ -389,22 +389,17 @@ Function.Bijective (StoneCoIsomorphism_asCont X) := by {
     exact h
 }
 
-noncomputable def StoneHomeomorphism (X : Profiniteᵒᵖ) :
-((𝟭 Profiniteᵒᵖ).obj X).unop ≃ₜ ((Clop ⋙ Hom2).obj X).unop := by {
+noncomputable def StoneCoIsomorphism (X : Profiniteᵒᵖ) :
+((Clop ⋙ Hom2).obj X) ≅ ((𝟭 Profiniteᵒᵖ).obj X)
+:= by {
   let e : ((𝟭 Profiniteᵒᵖ).obj X).unop ≃ ((Clop ⋙ Hom2).obj X).unop :=
     Equiv.ofBijective (StoneCoIsomorphism_asCont X) stone_co_bijective
   have he : Continuous e :=
     (StoneCoIsomorphism_asCont X).continuous
   let h : ((𝟭 Profiniteᵒᵖ).obj X).unop ≃ₜ ((Clop ⋙ Hom2).obj X).unop :=
     (he.homeoOfEquivCompactToT2 : ((𝟭 Profiniteᵒᵖ).obj X).unop ≃ₜ ((Clop ⋙ Hom2).obj X).unop)
-  use h
-  · exact h.continuous
-  · exact h.continuous_symm
+  exact (CompHausLike.isoOfHomeo (h)).op
 }
-
-noncomputable def StoneCoIsomorphism (X : Profiniteᵒᵖ) :
-((Clop ⋙ Hom2).obj X) ≅ ((𝟭 Profiniteᵒᵖ).obj X)
-:= (CompHausLike.isoOfHomeo (StoneHomeomorphism X)).op
 
 lemma clop_hom_f_of_basic_hom {X Y : Profiniteᵒᵖ} {f : X ⟶ Y} {y : Y.unop} :
 ((Clop ⋙ Hom2).map f).unop (basicHom (y)) = basicHom (f.unop y) := by {
@@ -425,9 +420,8 @@ lemma StoneCoIsomorphism_inv_unop_basicHom {Z : Profiniteᵒᵖ} {z : Z.unop} :
 ((StoneCoIsomorphism Z).inv.unop) (basicHom z) = z := by {
   classical
   simp [StoneCoIsomorphism, CompHausLike.isoOfHomeo]
-  have hz : (StoneHomeomorphism Z) z = basicHom z := by {
+  have hz : (StoneCoIsomorphism Z).unop.hom z = basicHom z := by {
     classical
-    simp [StoneHomeomorphism]
     change
       (Equiv.ofBijective (StoneCoIsomorphism_asCont Z) stone_co_bijective z) = basicHom z
     simp [Equiv.ofBijective, StoneCoIsomorphism_asCont]
@@ -435,8 +429,9 @@ lemma StoneCoIsomorphism_inv_unop_basicHom {Z : Profiniteᵒᵖ} {z : Z.unop} :
     ext U
     rfl
   }
-  change (StoneHomeomorphism Z).symm (basicHom z) = z
-  simpa [hz] using (congrArg (fun t => (StoneHomeomorphism Z).symm t) hz).symm
+  change (StoneCoIsomorphism Z).unop.inv (basicHom z) = z
+  rw [←hz]
+  exact Iso.hom_inv_id_apply (StoneCoIsomorphism Z).unop z
 }
 
 noncomputable def StoneCounit : Clop ⋙ Hom2 ≅ 𝟭 Profiniteᵒᵖ := by refine {
