@@ -4,10 +4,8 @@ import Mathlib.Order.Ideal
 import Mathlib.Order.PrimeIdeal
 import Stone.ExistsMaximalIdeal
 
--- variable {A : Type*} [BoolAlg]
-
 lemma non_top_principal_is_proper (A : BoolAlg) (p : A) (hPNonTop : p ≠ ⊤)
-  : (Order.Ideal.IsProper (Order.Ideal.principal p)) := by
+  : (Order.Ideal.IsProper (Order.Ideal.principal p)) := by {
   rw [@Order.Ideal.isProper_iff]
   rw [Set.ne_univ_iff_exists_notMem]
   let I := Order.Ideal.principal p
@@ -21,14 +19,16 @@ lemma non_top_principal_is_proper (A : BoolAlg) (p : A) (hPNonTop : p ≠ ⊤)
     exact hPNonTop hPIsTop
   use ⊤
   exact hTopNinI
+}
 
-lemma comp_non_bot_is_non_top (A : BoolAlg) (p : A) (hPNonBot : p ≠ ⊥) : pᶜ ≠ ⊤ := by
+lemma comp_non_bot_is_non_top (A : BoolAlg) (p : A) (hPNonBot : p ≠ ⊥) : pᶜ ≠ ⊤ := by {
   by_contra!
   have : p = ⊥ := by exact compl_eq_top.mp this
   exact hPNonBot this
+}
 
 lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠ ⊥) :
-  ∃ φ : A ⟶ B , φ p = ⊤ := by
+  ∃ φ : A ⟶ B , φ p = ⊤ := by {
   let I' := Order.Ideal.principal pᶜ
   have : pᶜ ≠ ⊤ := comp_non_bot_is_non_top A p pNonZero
   have hITProper : I'.IsProper := non_top_principal_is_proper A pᶜ this
@@ -39,7 +39,7 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
   let φ : BoundedLatticeHom A B := {
     toFun := fun a ↦ if a ∈ I then ⊥ else ⊤
 
-    map_sup' := by
+    map_sup' := by {
       intro a b
       split
       case isTrue h =>
@@ -59,8 +59,9 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
         case inr hB =>
           rw [if_neg hB]
           exact Eq.symm (sup_top_eq (if a ∈ I then ⊥ else ⊤))
+    }
 
-    map_inf' := by
+    map_inf' := by {
       intro a b
       split
       case isTrue h =>
@@ -87,19 +88,23 @@ lemma nonzero_homomorphism (A : BoolAlg) (B : BoolAlg) (p : A) (pNonZero : p ≠
             exact h this
         rw [if_neg hAAndBNotInI.left, if_neg hAAndBNotInI.right]
         exact Eq.symm (top_inf_eq ⊤)
+    }
 
-    map_top' := by
+    map_top' := by {
       have : ⊤ ∉ I := Order.Ideal.IsProper.top_notMem hIMax.toIsProper
       rw [if_neg this]
+    }
 
-    map_bot' := by
+    map_bot' := by {
       have : ⊥ ∈ I := Order.Ideal.bot_mem I
       rw [if_pos this]
+    }
   }
-  have hPhiPTop : φ p = ⊤ := by
+  have hPhiPTop : φ p = ⊤ := by {
     have : pᶜ ∈ I := Order.Ideal.principal_le_iff.mp hIGeIT
     have hPNotInI : p ∉ I := Order.Ideal.IsProper.notMem_of_compl_mem hIMax.toIsProper this
-    have : φ.toFun p = ⊤ := if_neg hPNotInI
-    exact this
+    exact if_neg hPNotInI
+  }
   use BoolAlg.ofHom φ
   exact hPhiPTop
+}

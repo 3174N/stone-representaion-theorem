@@ -376,6 +376,48 @@ noncomputable def StoneUnit : 𝟭 BoolAlg ≅ Hom2 ⋙ Clop := by refine {
       simp_all only [Functor.id_obj, Functor.id_map]
     }
   }
-  hom_inv_id := by {sorry}
-  inv_hom_id := by {sorry}
+  hom_inv_id := by {
+      ext A p
+      simp only [Functor.id_obj, NatTrans.comp_app, Functor.comp_obj, BoolAlg.hom_comp,
+        BoundedLatticeHom.comp_apply, NatTrans.id_app, BoolAlg.hom_id, BoundedLatticeHom.id_apply]
+      let s : TopologicalSpace.Clopens (A ⟶ Two) := ⟨{φ | (ConcreteCategory.hom φ) p = ⊤},
+              (fa_is_top_set_is_clopen ⟨ p, rfl ⟩)⟩
+      have hStruct : (BoolAlg.Hom.hom (StoneIsomorphism A)) p =
+          s := rfl
+      erw [hStruct]
+      unfold StoneIsomorphismInv
+      dsimp
+      change Classical.choose (StoneIsomorphismInv._proof_1 A s) = p
+      have hChoose := Classical.choose_spec (StoneIsomorphismInv._proof_1 A s)
+      have hSIsBasicP : s.carrier = basicSet p := by {
+        rw [← hStruct]
+        rfl
+      }
+      symm
+      exact hChoose.2 p hSIsBasicP
+    }
+  inv_hom_id := by {
+    ext A p
+    simp only [Functor.comp_obj, NatTrans.comp_app, Functor.id_obj, BoolAlg.hom_comp,
+      BoundedLatticeHom.comp_apply, NatTrans.id_app, BoolAlg.hom_id, BoundedLatticeHom.id_apply]
+    let s := Classical.choose (clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen p))
+    have : (BoolAlg.Hom.hom (StoneIsomorphismInv A)) p = s := rfl
+    erw [this]
+    obtain ⟨ a, ha ⟩ := clopen_is_fa_is_top (TopologicalSpace.Clopens.isClopen p)
+    have : s = a := by {
+      apply ha.2
+      exact (Classical.choose_spec (StoneIsomorphismInv._proof_1 A p)).1
+    }
+    rw [this]
+    let basicA : TopologicalSpace.Clopens (A ⟶ Two) := ⟨{φ | (ConcreteCategory.hom φ) a = ⊤},
+            (fa_is_top_set_is_clopen ⟨ a, rfl ⟩)⟩
+    have : (BoolAlg.Hom.hom (StoneIsomorphism A)) a =
+        basicA := rfl
+    erw [this]
+    change (basicA : TopologicalSpace.Clopens _) = (p : TopologicalSpace.Clopens _)
+    apply TopologicalSpace.Clopens.ext
+    change basicSet a = p.carrier
+    symm
+    exact ha.1
+  }
 }
