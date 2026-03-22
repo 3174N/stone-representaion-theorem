@@ -1,13 +1,13 @@
-# Stone
+# Stone Representation Theorem
 
-## GitHub configuration
+This repository contains a formalization of [Stone's Representation Theorem](https://en.wikipedia.org/wiki/Stone's_representation_theorem_for_Boolean_algebras) using Lean4.
 
-To set up your new GitHub repository, follow these steps:
+## File Overview
+The lean files are located in the `Stone/` directory.
 
-* Under your repository name, click **Settings**.
-* In the **Actions** section of the sidebar, click "General".
-* Check the box **Allow GitHub Actions to create and approve pull requests**.
-* Click the **Pages** section of the settings sidebar.
-* In the **Source** dropdown menu, select "GitHub Actions".
-
-After following the steps above, you can remove this section from the README file.
+- `Defs.lean` - Contains the base definitions and instances for the project. 2 as a boolean algebra, 2^A as a stone space, etc'. Also containes some basic lemmas regarding these definitions.
+- `ExistsMaximalIdeal.lean` - Containes a lemma useful for the next lemma.
+- `ExistsNonZeroHomomorphism.lean` - Contains a lemma useful for the final isomorphism.
+- `StoneCounit.lean` - Contains the counit isomorphism required for the definition of the Stone Duality.
+- `StoneEquivalence.lean` - Contains the definition of the Stone Duality.
+- `StoneUnit.lean` - Contains the counit isomorphism required for the definition of the Stone Duality.
